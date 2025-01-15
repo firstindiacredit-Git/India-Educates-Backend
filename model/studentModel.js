@@ -8,7 +8,7 @@ const studentSchema = new Schema({
     },
     studentImage: {
         type: String,
-        required: true
+        default: "default.jpeg"
     },
     resume: {
         type: String,
@@ -18,8 +18,8 @@ const studentSchema = new Schema({
     },
     studentId: {
         type: String,
-        required: true,
-        unique: true
+        unique: true,
+        sparse: true
     },
     joiningDate: {
         type: Date,
@@ -38,6 +38,7 @@ const studentSchema = new Schema({
     },
     phone: {
         type: String,
+        required: true
     },
     course: {
         type: String,
