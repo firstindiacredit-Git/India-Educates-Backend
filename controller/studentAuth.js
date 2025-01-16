@@ -283,4 +283,55 @@ router.delete('/students/:id', async (req, res) => {
     }
 });
 
+// Add this new endpoint for student profile
+router.get('/student/profile', async (req, res) => {
+    try {
+        // Get the token from the Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        // Extract the token
+        const token = authHeader.split(' ')[1];
+
+        // Verify the token and get the student ID
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const studentId = decoded._id;
+
+        // Find the student by ID
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        // Return the student data
+        res.json(student);
+    } catch (error) {
+        console.error('Error fetching student profile:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Add this new route to get a single student by ID
+router.get('/students/:id', async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id);
+        
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+        
+        res.json(student);
+    } catch (err) {
+        if (err.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid student ID format' });
+        }
+        res.status(500).json({ message: err.message });
+    }
+});
+
 module.exports = router; 
