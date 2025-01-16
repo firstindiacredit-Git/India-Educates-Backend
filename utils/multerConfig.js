@@ -36,11 +36,26 @@ const employeeStorage = multer.diskStorage({
 
 const studentStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/student');
+    let uploadPath = './uploads/student';
+    
+    // Handle different types of student documents
+    if (file.fieldname === 'profileImage') {
+      uploadPath = './uploads/student/profiles';
+    } else if (file.fieldname === 'admissionDocs') {
+      uploadPath = './uploads/student/admission';
+    } else if (file.fieldname === 'scholarshipDocs') {
+      uploadPath = './uploads/student/scholarship';
+    } else if (file.fieldname === 'leaveApplicationDocs') {
+      uploadPath = './uploads/student/leave';
+    } else if (file.fieldname === 'certificateDocs') {
+      uploadPath = './uploads/student/certificates';
+    }
+    
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + file.originalname;
-    cb(null, file.fieldname + '-' + uniqueSuffix);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -139,7 +154,13 @@ const uploadStudent = multer({
   storage: studentStorage,
   fileFilter: fileFilter,
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
-});
+}).fields([
+  { name: 'profileImage', maxCount: 1 },
+  { name: 'admissionDocs', maxCount: 5 },
+  { name: 'scholarshipDocs', maxCount: 3 },
+  { name: 'leaveApplicationDocs', maxCount: 2 },
+  { name: 'certificateDocs', maxCount: 2 }
+]);
 
 const uploadProject = multer({
   storage: projectStorage,
