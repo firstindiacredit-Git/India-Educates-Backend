@@ -20,6 +20,9 @@ const chatAuth = require("./chatController/chatAuth");
 const groupAuth = require("./chatController/groupAuth");
 const meetingController = require("./controller/meetingScheuler");
 const studentAuth = require('./controller/studentAuth');
+const studentFormRoutes = require('./controller/studentForm');
+const jwt = require('jsonwebtoken');
+
 const http = require('http');
 const { Server } = require("socket.io");
 const { UserStatus } = require("./chatModel/chatModel");
@@ -198,6 +201,7 @@ app.use("/api", chatAuth);
 app.use("/api", groupAuth);
 app.use("/api", meetingController);
 app.use("/api", studentAuth);
+app.use('/api', studentFormRoutes);
 
 // app.use(express.static(path.join(__dirname, 'dist')));
 

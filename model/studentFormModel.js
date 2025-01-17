@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const studentFormSchema = new mongoose.Schema({
+  student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },  
   // Personal Information
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  fullName: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
   gender: { type: String, required: true },
   profileImage: { type: String },
