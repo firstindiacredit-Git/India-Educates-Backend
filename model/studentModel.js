@@ -45,6 +45,7 @@ const studentSchema = new Schema({
     },
     batch: {
         type: String,
+        default: ''
     },
     description: {
         type: String

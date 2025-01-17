@@ -186,10 +186,36 @@ router.put('/students/:id', upload, async (req, res) => {
         const files = req.files;
         const studentData = req.body;
 
+        // Log the incoming data for debugging
+        console.log('Incoming student data:', studentData);
+
+        // Ensure studentId is included in the update
+        if (studentData.studentId) {
+            // Check if the studentId is already in use by another student
+            const existingStudent = await Student.findOne({ 
+                studentId: studentData.studentId,
+                _id: { $ne: req.params.id } // Exclude current student
+            });
+
+            if (existingStudent) {
+                return res.status(400).json({ 
+                    message: 'Student ID already exists' 
+                });
+            }
+        }
+
+        // Ensure batch is properly formatted as a string
+        if (studentData.batch) {
+            if (Array.isArray(studentData.batch)) {
+                studentData.batch = studentData.batch.join(', ');
+            } else if (typeof studentData.batch !== 'string') {
+                studentData.batch = String(studentData.batch);
+            }
+        }
+
         // Handle file uploads if present
         if (files?.studentImage) {
-            let newPath = files.studentImage[0].path.replace('uploads\\', "");
-            studentData.studentImage = newPath;
+            studentData.studentImage = files.studentImage[0].path.replace('uploads\\', "");
         }
         if (files?.resume) {
             studentData.resume = files.resume[0].path.replace('uploads\\', "");
@@ -251,6 +277,9 @@ router.put('/students/:id', upload, async (req, res) => {
             delete studentData.paymentApp;
         }
 
+        // Log the processed data before update
+        console.log('Processed student data:', studentData);
+
         const updatedStudent = await Student.findByIdAndUpdate(
             req.params.id,
             { $set: studentData },
@@ -261,8 +290,12 @@ router.put('/students/:id', upload, async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
+        // Log the updated student
+        console.log('Updated student:', updatedStudent);
+
         res.json(updatedStudent);
     } catch (err) {
+        console.error('Update error:', err);
         res.status(400).json({ message: err.message });
     }
 });
