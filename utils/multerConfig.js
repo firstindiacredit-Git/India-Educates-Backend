@@ -154,13 +154,7 @@ const uploadStudent = multer({
   storage: studentStorage,
   fileFilter: fileFilter,
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
-}).fields([
-  { name: 'profileImage', maxCount: 1 },
-  { name: 'admissionDocs', maxCount: 5 },
-  { name: 'scholarshipDocs', maxCount: 3 },
-  { name: 'leaveApplicationDocs', maxCount: 2 },
-  { name: 'certificateDocs', maxCount: 2 }
-]);
+});
 
 const uploadProject = multer({
   storage: projectStorage,
