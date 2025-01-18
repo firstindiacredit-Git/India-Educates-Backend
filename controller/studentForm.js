@@ -3,6 +3,7 @@ const router = express.Router();
 const StudentForm = require('../model/studentFormModel');
 const { uploadStudent } = require('../utils/multerConfig');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 // Create a new student form
 router.post('/student/submit-form', uploadStudent.single('profileImage'), async (req, res) => {
@@ -87,13 +88,18 @@ router.patch('/students-forms/:id', async (req, res) => {
       req.params.id,
       { status: req.body.status },
       { new: true }
-    );
+    ).populate('student');
+
     if (!form) {
       return res.status(404).json({
         success: false,
         message: 'Form not found'
       });
     }
+
+    // Send email notification
+    await sendStatusUpdateEmail(form);
+
     res.status(200).json({
       success: true,
       data: form
@@ -106,6 +112,63 @@ router.patch('/students-forms/:id', async (req, res) => {
     });
   }
 });
+
+// Add this function for sending status update emails
+async function sendStatusUpdateEmail(form) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.USER_EMAIL,
+      pass: process.env.USER_PASSWORD
+    },
+  });
+
+  const getFormTypeName = (formType) => {
+    const formTypes = {
+      form1: 'Admission Form',
+      form2: 'Scholarship Form',
+      form3: 'Leave Application',
+      form4: 'Hostel Application',
+      form5: 'Library Card Request',
+      form6: 'ID Card Request',
+      form7: 'Exam Registration',
+      form8: 'Club Registration',
+      form9: 'Certificate Request'
+    };
+    return formTypes[formType] || formType;
+  };
+
+  const mailOptions = {
+    from: process.env.USER_EMAIL,
+    to: form.student.emailid,
+    subject: `Form Status Update - ${getFormTypeName(form.formType)}`,
+    html: `
+      <h1>Hello ${form.student.studentName},</h1>
+      <p>The status of your ${getFormTypeName(form.formType)} has been updated.</p>
+      <p><strong>New Status:</strong> ${form.status.charAt(0).toUpperCase() + form.status.slice(1)}</p>
+      <p><strong>Form Details:</strong></p>
+      <ul>
+        <li>Form Type: ${getFormTypeName(form.formType)}</li>
+        <li>Submission Date: ${new Date(form.submittedAt).toLocaleDateString()}</li>
+      </ul>
+      ${form.status === 'approved' ? 
+        '<p>Congratulations! Your form has been approved.</p>' : 
+        form.status === 'rejected' ? 
+        '<p>We regret to inform you that your form has been rejected. Please contact the administration for more details.</p>' :
+        '<p>Your form is currently under review.</p>'
+      }
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Thank you!</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Status update email sent to ${form.student.emailid}`);
+  } catch (error) {
+    console.error('Error sending status update email:', error);
+  }
+}
 
 // Get forms for specific student
 router.get('/student/my-forms', async (req, res) => {

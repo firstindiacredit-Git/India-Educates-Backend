@@ -187,7 +187,7 @@ router.put('/students/:id', upload, async (req, res) => {
         const studentData = req.body;
 
         // Log the incoming data for debugging
-        console.log('Incoming student data:', studentData);
+        // console.log('Incoming student data:', studentData);
 
         // Ensure studentId is included in the update
         if (studentData.studentId) {
@@ -278,7 +278,7 @@ router.put('/students/:id', upload, async (req, res) => {
         }
 
         // Log the processed data before update
-        console.log('Processed student data:', studentData);
+        // console.log('Processed student data:', studentData);
 
         const updatedStudent = await Student.findByIdAndUpdate(
             req.params.id,
@@ -291,7 +291,7 @@ router.put('/students/:id', upload, async (req, res) => {
         }
 
         // Log the updated student
-        console.log('Updated student:', updatedStudent);
+        // console.log('Updated student:', updatedStudent);
 
         res.json(updatedStudent);
     } catch (err) {
