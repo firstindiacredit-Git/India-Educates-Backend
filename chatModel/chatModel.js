@@ -9,7 +9,7 @@ const chatSchema = new mongoose.Schema({
     senderType: {
         type: String,
         required: true,
-        enum: ['AdminUser', 'Employee', 'Client']
+        enum: ['AdminUser', 'Employee', 'Client', 'Student']
     },
     receiverId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +19,7 @@ const chatSchema = new mongoose.Schema({
     receiverType: {
         type: String,
         required: true,
-        enum: ['AdminUser', 'Employee', 'Client', 'Group']
+        enum: ['AdminUser', 'Employee', 'Client', 'Student', 'Group']
     },
     message: {
         type: String,
@@ -88,7 +88,7 @@ const userChatSettingsSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        enum: ['AdminUser', 'Employee', 'Client']
+        enum: ['AdminUser', 'Employee', 'Client', 'Student']
     },
     backgroundColor: {
         type: String,
@@ -109,7 +109,7 @@ const userStatusSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        enum: ['AdminUser', 'Employee', 'Client']
+        enum: ['AdminUser', 'Employee', 'Client', 'Student']
     },
     isOnline: {
         type: Boolean,
