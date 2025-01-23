@@ -25,7 +25,7 @@ const jwt = require('jsonwebtoken');
 
 const http = require('http');
 const { Server } = require("socket.io");
-const { UserStatus } = require("./chatModel/chatModel");
+const { UserStatus, Notification } = require("./chatModel/chatModel");
 
 
 const cors = require("cors");
@@ -108,10 +108,23 @@ io.on('connection', (socket) => {
   });
 
   // Handle private message with acknowledgment
-  socket.on('private_message', (data) => {
+  socket.on('private_message', async (data) => {
     const { receiverId, message } = data;
+    
+    // Create notification
+    const notification = new Notification({
+      userId: receiverId,
+      chatId: message._id,
+      senderId: message.senderId,
+      senderType: message.senderType,
+      message: message.message || 'New message received',
+      type: 'private'
+    });
+    await notification.save();
+
+    // Emit both message and notification
     io.to(receiverId).emit('receive_message', message);
-    // Send acknowledgment back to sender
+    io.to(`notifications_${receiverId}`).emit('new_notification', notification);
     socket.emit('message_sent', message);
   });
 
@@ -125,7 +138,26 @@ io.on('connection', (socket) => {
     socket.join(groupId);
   });
 
-  socket.on('group_message', (data) => {
+  socket.on('group_message', async (data) => {
+    // Create notifications for all group members except sender
+    const notifications = data.members
+      .filter(member => member.userId !== data.senderDetails.userId)
+      .map(member => ({
+        userId: member.userId,
+        chatId: data._id,
+        senderId: data.senderId,
+        senderType: data.senderType,
+        message: data.message || 'New group message',
+        type: 'group'
+      }));
+
+    await Notification.insertMany(notifications);
+
+    // Emit notifications to all members
+    notifications.forEach(notification => {
+      io.to(`notifications_${notification.userId}`).emit('new_notification', notification);
+    });
+
     io.to(data.groupId).emit('receive_group_message', data.message);
   });
 
@@ -173,6 +205,38 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.error('Error updating user status on disconnect:', error);
     }
+  });
+
+  // Add notification handlers
+  socket.on('join_notifications', (userId) => {
+    socket.join(`notifications_${userId}`);
+  });
+
+  socket.on('call-user', (data) => {
+    io.to(data.receiverId).emit('incoming-call', {
+        callerId: data.callerId,
+        callerName: data.callerName,
+        type: data.type
+    });
+  });
+
+  socket.on('call-accepted', (data) => {
+    io.to(data.callerId).emit('call-accepted', {
+        signal: data.signal,
+        receiverId: data.receiverId
+    });
+  });
+
+  socket.on('call-rejected', (data) => {
+    io.to(data.callerId).emit('call-rejected', {
+        receiverId: data.receiverId
+    });
+  });
+
+  socket.on('end-call', (data) => {
+    io.to(data.receiverId).emit('call-ended', {
+        callerId: data.callerId
+    });
   });
 });
 

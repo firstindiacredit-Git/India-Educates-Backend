@@ -299,14 +299,14 @@ router.get('/employeeColors/:employeeId', async (req, res) => {
             return res.json({
                 notepadColor: '#fff3cd',
                 todoColor: '#cfe2ff',
-                excelSheetColor: '#d4edda'
+                excelSheetColors: []
             });
         }
         
         res.json({
             notepadColor: employeeDash.notepadColor || '#fff3cd',
             todoColor: employeeDash.todoColor || '#cfe2ff',
-            excelSheetColor: employeeDash.excelSheetColor || '#d4edda'
+            excelSheetColors: JSON.parse(employeeDash.excelSheetColors || '[]')
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -316,7 +316,7 @@ router.get('/employeeColors/:employeeId', async (req, res) => {
 // Update the route for setting colors
 router.put('/employeeColors/:employeeId', async (req, res) => {
     try {
-        const { notepadColor, todoColor, excelSheetColor } = req.body;
+        const { notepadColor, todoColor, excelSheetColors } = req.body;
         
         const updatedDash = await EmployeeDash.findOneAndUpdate(
             { employeeId: req.params.employeeId },
@@ -324,7 +324,7 @@ router.put('/employeeColors/:employeeId', async (req, res) => {
                 $set: { 
                     notepadColor,
                     todoColor,
-                    excelSheetColor
+                    excelSheetColors: JSON.stringify(excelSheetColors)
                 } 
             },
             { new: true, upsert: true }
@@ -333,7 +333,7 @@ router.put('/employeeColors/:employeeId', async (req, res) => {
         res.json({
             notepadColor: updatedDash.notepadColor,
             todoColor: updatedDash.todoColor,
-            excelSheetColor: updatedDash.excelSheetColor
+            excelSheetColors: JSON.parse(updatedDash.excelSheetColors || '[]')
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

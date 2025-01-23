@@ -21,8 +21,9 @@ const employeeDashSchema = new Schema({
     todoColor: {
         type: String,
     },
-    excelSheetColor: {
-        type: String,
+    excelSheetColors: {
+        type: String, // Will store array of colors as JSON string
+        default: '[]'
     }
 }, {
     timestamps: true

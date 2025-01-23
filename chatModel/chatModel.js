@@ -126,8 +126,46 @@ const userStatusSchema = new mongoose.Schema({
 
 const UserStatus = mongoose.model('UserStatus', userStatusSchema);
 
+const notificationSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    chatId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Chats',
+        required: true
+    },
+    senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    senderType: {
+        type: String,
+        required: true,
+        enum: ['AdminUser', 'Employee', 'Client']
+    },
+    message: String,
+    isRead: {
+        type: Boolean,
+        default: false
+    },
+    type: {
+        type: String,
+        enum: ['private', 'group'],
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const Notification = mongoose.model('Notification', notificationSchema);
+
 module.exports = {
     Chat: mongoose.model('Chats', chatSchema),
     UserChatSettings,
-    UserStatus
+    UserStatus,
+    Notification
 };

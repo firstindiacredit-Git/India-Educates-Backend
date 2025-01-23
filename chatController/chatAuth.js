@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Chat, UserChatSettings, UserStatus } = require('../chatModel/chatModel');
+const { Chat, UserChatSettings, UserStatus, Notification } = require('../chatModel/chatModel');
 const { uploadChat } = require('../utils/multerConfig');
 
 // Create new chat message
@@ -51,10 +51,24 @@ router.post('/createChat', uploadChat, async (req, res) => {
 
         const savedChat = await newChat.save();
 
+        // Create notification for receiver
+        const notification = new Notification({
+            userId: receiverId,
+            chatId: savedChat._id,
+            senderId: senderId,
+            senderType: senderType,
+            message: message || 'New message received',
+            type: receiverType === 'Group' ? 'group' : 'private'
+        });
+        await notification.save();
+
         // Emit to both sender and receiver
         const io = req.app.get('io');
         io.to(receiverId).emit('receive_message', savedChat);
         io.to(senderId).emit('message_sent', savedChat);
+
+        // Emit notification event
+        io.to(receiverId).emit('new_notification', notification);
 
         res.status(201).json(savedChat);
     } catch (error) {
@@ -315,6 +329,87 @@ router.get('/getUserStatus/:userId', async (req, res) => {
     try {
         const status = await UserStatus.findOne({ userId: req.params.userId });
         res.status(200).json(status || { isOnline: false });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add new route to get notifications
+router.get('/notifications/:userId', async (req, res) => {
+    try {
+        const notifications = await Notification.find({
+            userId: req.params.userId,
+            isRead: false
+        }).sort({ createdAt: -1 });
+        res.status(200).json(notifications);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add route to mark notifications as read
+router.post('/markNotificationsRead', async (req, res) => {
+    try {
+        const { userId, senderId } = req.body;
+        await Notification.updateMany(
+            { 
+                userId,
+                senderId,
+                isRead: false
+            },
+            { isRead: true }
+        );
+        res.status(200).json({ message: 'Notifications marked as read' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add new routes for WebRTC signaling
+router.post('/call-offer', async (req, res) => {
+    try {
+        const { offer, callerId, receiverId, type } = req.body;
+        const io = req.app.get('io');
+        
+        io.to(receiverId).emit('incoming-call', {
+            offer,
+            callerId,
+            type
+        });
+        
+        res.status(200).json({ message: 'Call offer sent' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/call-answer', async (req, res) => {
+    try {
+        const { answer, callerId, receiverId } = req.body;
+        const io = req.app.get('io');
+        
+        io.to(callerId).emit('call-answered', {
+            answer,
+            receiverId
+        });
+        
+        res.status(200).json({ message: 'Call answer sent' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/ice-candidate', async (req, res) => {
+    try {
+        const { candidate, callerId, receiverId } = req.body;
+        const io = req.app.get('io');
+        
+        io.to(receiverId).emit('ice-candidate', {
+            candidate,
+            callerId
+        });
+        
+        res.status(200).json({ message: 'ICE candidate sent' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
