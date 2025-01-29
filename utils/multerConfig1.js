@@ -8,10 +8,10 @@ dotenv.config();
 
 // Initialize AWS S3 Client (v3)
 const s3 = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.CUSTOM_AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
+    accessKeyId: process.env.CUSTOM_AWS_ACCESS_KEY,
+    secretAccessKey: process.env.CUSTOM_AWS_SECRET_KEY,
   },
 });
 
@@ -31,7 +31,7 @@ const fileFilter = (req, file, cb) => {
 // Configure Multer storage for Employee
 const employeeStorage = multerS3({
   s3: s3,
-  bucket: process.env.AWS_BUCKET_NAME,
+  bucket: process.env.CUSTOM_AWS_BUCKET_NAME,
   acl: 'public-read',  // Set ACL to public-read
   key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
@@ -43,7 +43,7 @@ const employeeStorage = multerS3({
 // Configure Multer storage for Project
 const projectStorage = multerS3({
   s3: s3,
-  bucket: process.env.AWS_BUCKET_NAME,
+  bucket: process.env.CUSTOM_AWS_BUCKET_NAME,
   key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
     cb(null, 'uploads/project/' + file.fieldname + '-' + uniqueSuffix);
@@ -53,7 +53,7 @@ const projectStorage = multerS3({
 // Configure Multer storage for Task
 const taskStorage = multerS3({
   s3: s3,
-  bucket: process.env.AWS_BUCKET_NAME,
+  bucket: process.env.CUSTOM_AWS_BUCKET_NAME,
   key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
     cb(null, 'uploads/task/' + file.fieldname + '-' + uniqueSuffix);
@@ -63,7 +63,7 @@ const taskStorage = multerS3({
 // Configure Multer storage for Client
 const clientStorage = multerS3({
   s3: s3,
-  bucket: process.env.AWS_BUCKET_NAME,
+  bucket: process.env.CUSTOM_AWS_BUCKET_NAME,
   key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
     cb(null, 'uploads/client/' + file.fieldname + '-' + uniqueSuffix);
@@ -72,7 +72,7 @@ const clientStorage = multerS3({
 // Configure Multer storage for Message
 const messageStorage = multerS3({
   s3: s3,
-  bucket: process.env.AWS_BUCKET_NAME,
+  bucket: process.env.CUSTOM_AWS_BUCKET_NAME,
   key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
     cb(null, 'uploads/message/' + file.fieldname + '-' + uniqueSuffix);

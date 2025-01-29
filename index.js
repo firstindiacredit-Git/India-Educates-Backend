@@ -274,7 +274,7 @@ app.use('/api', studentFormRoutes);
 // });
 
 //Port setup
-const port = process.env.PORT || 5000;
+const port = process.env.APP_PORT || 5000;
 server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });

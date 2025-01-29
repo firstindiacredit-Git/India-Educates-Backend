@@ -241,7 +241,7 @@ router.put('/meetings/:id/status', async (req, res) => {
       }
 
       // Only attempt SMS and WhatsApp in production or with verified numbers
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.APP_ENV === 'production') {
         try {
           await sendStatusUpdateSMS(meeting);
         } catch (smsError) {
@@ -299,7 +299,7 @@ async function sendStatusUpdateEmail(meeting) {
 async function sendStatusUpdateSMS(meeting) {
   try {
     // Check if we're in development mode
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.APP_ENV !== 'production') {
       console.log('SMS notification skipped in development mode');
       return;
     }
