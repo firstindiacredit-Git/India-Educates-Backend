@@ -1,0 +1,29 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "index.js",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/socket.io/(.*)",
+            "dest": "index.js"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "index.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "index.js"
+        }
+    ],
+    "env": {
+        "APP_PORT": "5000",
+        "CUSTOM_AWS_REGION": "eu-north-1",
+        "CUSTOM_AWS_BUCKET_NAME": "pizeonfly-crm",
+        "APP_ENV": "production"
+    }
+} 
