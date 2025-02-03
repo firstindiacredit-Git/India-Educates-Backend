@@ -267,11 +267,11 @@ app.use("/api", meetingController);
 app.use("/api", studentAuth);
 app.use('/api', studentFormRoutes);
 
-// app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-// });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 //Port setup
 const port = process.env.APP_PORT || 5000;
