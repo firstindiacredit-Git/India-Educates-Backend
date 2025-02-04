@@ -34,24 +34,12 @@ const path = require("path");
 dotenv.config();
 
 //Middleware setup
-// const allowedOrigins = ['https://crm.pizeonfly.com', 'http://localhost:5173'];
-// const corsOptions = {
-//   origin: (origin, callback) => {
-//     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   methods: 'GET,POST,PUT,DELETE,PATCH', 
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// };
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // For JSON payloads
 app.use(express.urlencoded({ limit: '10mb', extended: true })); // For URL-encoded payloads
 app.use(express.static("./uploads"));
 
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB setup
 const url = process.env.MONGODB_URI;
