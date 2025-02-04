@@ -148,16 +148,16 @@ exports.updateProject = async (req, res) => {
         const updateData = { ...req.body };
 
         // Handle project images if new ones are uploaded
-        if (req.files['projectImage']) {
+        if (req.files && req.files['projectImage'] && req.files['projectImage'].length > 0) {
             const projectImages = req.files['projectImage'].map(file =>
-                file.path.replace('uploads\\', "")
+                file.path.replace('uploads\\', '')
             );
             updateData.projectImage = projectImages;
         }
 
         // Handle project icon if a new one is uploaded
-        if (req.files['projectIcon']) {
-            updateData.projectIcon = req.files['projectIcon'][0].path.replace('uploads\\', "");
+        if (req.files && req.files['projectIcon'] && req.files['projectIcon'].length > 0) {
+            updateData.projectIcon = req.files['projectIcon'][0].path.replace('uploads\\', '');
         }
 
         // Handle taskAssignPerson
@@ -172,11 +172,6 @@ exports.updateProject = async (req, res) => {
             updateData.clientAssignPerson = Array.isArray(updateData.clientAssignPerson)
                 ? updateData.clientAssignPerson.filter(id => id && id !== 'undefined')
                 : [updateData.clientAssignPerson].filter(id => id && id !== 'undefined');
-        }
-
-        // Ensure backgroundColor is included in the update
-        if (updateData.backgroundColor) {
-            updateData.backgroundColor = updateData.backgroundColor;
         }
 
         const updatedProject = await Project.findByIdAndUpdate(
