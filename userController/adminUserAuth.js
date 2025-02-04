@@ -101,11 +101,12 @@ exports.getUserProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { username } = req.body;
-    const userId = req.user.userId; // From JWT token
+    const userId = req.user.userId;
 
     const updateData = { username };
     if (req.file) {
-      updateData.profileImage = req.file.path;
+      // Store only the filename instead of full path
+      updateData.profileImage = req.file.filename;
     }
 
     const user = await User.findByIdAndUpdate(
