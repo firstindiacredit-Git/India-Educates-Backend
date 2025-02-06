@@ -66,12 +66,17 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Be more specific in production
+    origin: process.env.FRONTEND_URL || "https://crm.indiaeducates.org",
     methods: ["GET", "POST"],
-    pingTimeout: 60000, // Add ping timeout
-    reconnection: true, // Enable reconnection
-    reconnectionAttempts: 5, // Set max reconnection attempts
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ["websocket", "polling"],
+  allowUpgrades: true,
+  upgradeTimeout: 10000,
+  cookie: false,
 });
 
 // Socket.IO connection handling
