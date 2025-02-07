@@ -223,45 +223,45 @@ io.on("connection", (socket) => {
     socket.join(`notifications_${userId}`);
   });
 
-  // Handle call initiation
-  socket.on("call-user", (data) => {
-    console.log("Call initiated:", data);
-    // Emit to specific user's room
+  // Handle WebRTC signaling with better error handling
+  socket.on("webrtc-signal", (data) => {
+    try {
+      console.log(
+        `Signal type: ${data.type} from: ${socket.id} to: ${data.receiverId}`
+      );
+      if (!data.receiverId) {
+        console.error("No receiverId provided in webrtc-signal");
+        return;
+      }
+      io.to(data.receiverId).emit("webrtc-signal", {
+        signal: data.signal,
+        callerId: socket.id,
+        callerName: data.callerName,
+      });
+    } catch (error) {
+      console.error("Error in webrtc-signal handler:", error);
+    }
+  });
+
+  socket.on("call-request", (data) => {
+    console.log("Call request from:", socket.id, "to:", data.receiverId);
     io.to(data.receiverId).emit("incoming-call", {
-      callerId: data.callerId,
+      callerId: socket.id,
       callerName: data.callerName,
-      offer: data.offer,
     });
   });
 
-  socket.on("call-answered", (data) => {
-    console.log("Call answered:", data);
-    io.to(data.callerId).emit("call-accepted", {
-      answer: data.answer,
-      receiverId: data.receiverId,
-    });
-  });
-
-  socket.on("ice-candidate", (data) => {
-    console.log("ICE candidate:", data.callerId, "->", data.receiverId);
-    io.to(data.receiverId).emit("ice-candidate", {
-      candidate: data.candidate,
-      callerId: data.callerId,
+  socket.on("call-response", (data) => {
+    console.log("Call response:", data.accepted ? "accepted" : "rejected");
+    io.to(data.callerId).emit("call-response", {
+      accepted: data.accepted,
+      receiverId: socket.id,
     });
   });
 
   socket.on("end-call", (data) => {
-    console.log("Call ended by:", data.callerId);
-    io.to(data.receiverId).emit("call-ended", {
-      callerId: data.callerId,
-    });
-  });
-
-  socket.on("call-rejected", (data) => {
-    console.log("Call rejected by:", data.receiverId);
-    io.to(data.callerId).emit("call-rejected", {
-      receiverId: data.receiverId,
-    });
+    console.log("Call ended by:", socket.id);
+    io.to(data.receiverId).emit("call-ended");
   });
 });
 
