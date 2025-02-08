@@ -244,6 +244,7 @@ io.on("connection", (socket) => {
 
   socket.on("ice-candidate", (data) => {
     console.log("ICE candidate:", data.callerId, "->", data.receiverId);
+    console.log("Candidate details:", data.candidate);
     io.to(data.receiverId).emit("ice-candidate", {
       candidate: data.candidate,
       callerId: data.callerId,
