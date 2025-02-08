@@ -66,7 +66,7 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Be more specific in production
+    origin: process.env.FRONTEND_URL || "https://crm.indiaeducates.org",
     methods: ["GET", "POST"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -78,9 +78,6 @@ const io = new Server(server, {
   upgradeTimeout: 10000,
   cookie: false,
 });
-
-// Add call state tracking
-const activeCallsMap = new Map();
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
@@ -216,13 +213,6 @@ io.on("connection", (socket) => {
           lastSeen: user.lastSeen,
         });
       }
-
-      // Clean up active calls
-      const receiverId = activeCallsMap.get(socket.id);
-      if (receiverId) {
-        io.to(receiverId).emit("call-ended");
-        activeCallsMap.delete(socket.id);
-      }
     } catch (error) {
       console.error("Error updating user status on disconnect:", error);
     }
@@ -233,64 +223,45 @@ io.on("connection", (socket) => {
     socket.join(`notifications_${userId}`);
   });
 
-  // Handle WebRTC signaling with better error handling
-  socket.on("webrtc-signal", (data) => {
-    try {
-      console.log(
-        `Signal type: ${data.type} from: ${socket.id} to: ${data.receiverId}`
-      );
-      if (!data.receiverId) {
-        console.error("No receiverId provided in webrtc-signal");
-        return;
-      }
-      io.to(data.receiverId).emit("webrtc-signal", {
-        signal: data.signal,
-        callerId: socket.id,
-        callerName: data.callerName,
-      });
-    } catch (error) {
-      console.error("Error in webrtc-signal handler:", error);
-    }
-  });
-
-  socket.on("call-request", (data) => {
-    console.log("Call request from:", socket.id, "to:", data.receiverId);
+  // Handle call initiation
+  socket.on("call-user", (data) => {
+    console.log("Call initiated:", data);
+    // Emit to specific user's room
     io.to(data.receiverId).emit("incoming-call", {
-      callerId: socket.id,
+      callerId: data.callerId,
       callerName: data.callerName,
+      offer: data.offer,
     });
   });
 
-  socket.on("call-response", (data) => {
-    console.log("Call response:", data.accepted ? "accepted" : "rejected");
-    io.to(data.callerId).emit("call-response", {
-      accepted: data.accepted,
-      receiverId: socket.id,
+  socket.on("call-answered", (data) => {
+    console.log("Call answered:", data);
+    io.to(data.callerId).emit("call-accepted", {
+      answer: data.answer,
+      receiverId: data.receiverId,
     });
   });
 
-  socket.on("call-offer", ({ offer, receiverId }) => {
-    activeCallsMap.set(socket.id, receiverId);
-    try {
-      if (!offer || !receiverId) {
-        throw new Error("Invalid call offer data");
-      }
-      io.to(receiverId).emit("call-offer", {
-        offer,
-        callerId: socket.id,
-      });
-    } catch (error) {
-      console.error("Error handling call offer:", error);
-      socket.emit("call-error", { message: "Failed to process call offer" });
-    }
+  socket.on("ice-candidate", (data) => {
+    console.log("ICE candidate:", data.callerId, "->", data.receiverId);
+    io.to(data.receiverId).emit("ice-candidate", {
+      candidate: data.candidate,
+      callerId: data.callerId,
+    });
   });
 
-  socket.on("call-answer", ({ answer, callerId }) => {
-    io.to(callerId).emit("call-answer", { answer });
+  socket.on("end-call", (data) => {
+    console.log("Call ended by:", data.callerId);
+    io.to(data.receiverId).emit("call-ended", {
+      callerId: data.callerId,
+    });
   });
 
-  socket.on("ice-candidate", ({ candidate, receiverId }) => {
-    io.to(receiverId).emit("ice-candidate", { candidate });
+  socket.on("call-rejected", (data) => {
+    console.log("Call rejected by:", data.receiverId);
+    io.to(data.callerId).emit("call-rejected", {
+      receiverId: data.receiverId,
+    });
   });
 });
 
