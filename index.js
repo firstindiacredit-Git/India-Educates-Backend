@@ -29,6 +29,7 @@ const { UserStatus, Notification } = require("./chatModel/chatModel");
 
 const cors = require("cors");
 const path = require("path");
+const { ExpressPeerServer } = require("peer");
 
 dotenv.config();
 
@@ -302,4 +303,28 @@ app.get("*", (req, res) => {
 const port = process.env.APP_PORT || 5000;
 server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
+});
+
+// PeerServer Configuration
+const peerServer = ExpressPeerServer(server, {
+  debug: false,
+  path: "/peerjs",
+  proxied: true,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? {
+          key: process.env.SSL_KEY,
+          cert: process.env.SSL_CERT,
+        }
+      : null,
+});
+
+app.use("/peer", peerServer);
+
+// Add authentication middleware
+peerServer.on("connection", (client) => {
+  const token = client.token;
+  if (!validateToken(token)) {
+    client.socket.close();
+  }
 });
