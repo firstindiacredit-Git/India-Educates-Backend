@@ -67,17 +67,12 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "https://crm.indiaeducates.org",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  transports: ["websocket", "polling"],
-  allowUpgrades: true,
-  upgradeTimeout: 10000,
-  cookie: false,
+  path: "/socket.io/", // Explicitly set the path
+  transports: ["websocket", "polling"], // Enable both WebSocket and polling
 });
 
 // Socket.IO connection handling
@@ -305,26 +300,21 @@ server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
 
-// PeerServer Configuration'
+// Move PeerServer configuration before routes
 const peerServer = ExpressPeerServer(server, {
-  debug: false,
-  path: "/peerjs",
+  debug: true, // Enable for debugging
+  path: "/myapp", // Change path to avoid conflicts
   proxied: true,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? {
-          key: process.env.SSL_KEY,
-          cert: process.env.SSL_CERT,
-        }
-      : null,
+  ssl: false, // Disable SSL for now to test
+  allow_discovery: true,
 });
 
-app.use("/peer", peerServer);
+app.use("/peerjs", peerServer);
 
-// Add authentication middleware
-peerServer.on("connection", (client) => {
-  const token = client.token;
-  if (!validateToken(token)) {
-    client.socket.close();
-  }
-});
+// Comment out or remove this until WebSocket is working
+// peerServer.on("connection", (client) => {
+//   const token = client.token;
+//   if (!validateToken(token)) {
+//     client.socket.close();
+//   }
+// });
