@@ -29,6 +29,8 @@ const { UserStatus, Notification } = require("./chatModel/chatModel");
 
 const cors = require("cors");
 const path = require("path");
+const { ExpressPeerServer } = require("peer");
+const fs = require("fs");
 
 dotenv.config();
 
@@ -301,3 +303,20 @@ server.listen(port, () => {
 
 // Add this to your existing environment variables
 const { TURN_SECRET, TURN_URLS } = process.env;
+
+// After creating your HTTP server, add:
+const peerServer = ExpressPeerServer(server, {
+  path: "/peerjs",
+  debug: true,
+});
+
+app.use("/peerjs", peerServer);
+
+// Add these event listeners
+peerServer.on("connection", (client) => {
+  console.log("Client connected:", client.getId());
+});
+
+peerServer.on("disconnect", (client) => {
+  console.log("Client disconnected:", client.getId());
+});
