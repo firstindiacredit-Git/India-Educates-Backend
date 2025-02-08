@@ -71,8 +71,13 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
-  path: "/socket.io/", // Explicitly set the path
-  transports: ["websocket", "polling"], // Enable both WebSocket and polling
+  allowEIO3: true,
+  path: "/socket.io/",
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e8,
 });
 
 // Socket.IO connection handling
@@ -302,11 +307,14 @@ server.listen(port, () => {
 
 // Move PeerServer configuration before routes
 const peerServer = ExpressPeerServer(server, {
-  debug: true, // Enable for debugging
-  path: "/myapp", // Change path to avoid conflicts
+  debug: true,
+  path: "/myapp",
   proxied: true,
-  ssl: false, // Disable SSL for now to test
+  ssl: false,
   allow_discovery: true,
+  alive_timeout: 60000,
+  key: "peerjs",
+  concurrent_limit: 5000,
 });
 
 app.use("/peerjs", peerServer);
