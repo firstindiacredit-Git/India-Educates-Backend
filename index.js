@@ -225,21 +225,29 @@ io.on("connection", (socket) => {
 
   // Handle call initiation
   socket.on("call-user", (data) => {
-    console.log("Call initiated from:", data.callerId, "to:", data.receiverId);
-    console.log("Offer SDP:", data.offer.sdp);
-    io.to(data.receiverId).emit("incoming-call", data);
+    console.log("Call initiated:", data);
+    // Emit to specific user's room
+    io.to(data.receiverId).emit("incoming-call", {
+      callerId: data.callerId,
+      callerName: data.callerName,
+      offer: data.offer,
+    });
   });
 
   socket.on("call-answered", (data) => {
-    console.log("Call answered by:", data.receiverId, "for:", data.callerId);
-    console.log("Answer SDP:", data.answer.sdp);
-    io.to(data.callerId).emit("call-accepted", data);
+    console.log("Call answered:", data);
+    io.to(data.callerId).emit("call-accepted", {
+      answer: data.answer,
+      receiverId: data.receiverId,
+    });
   });
 
   socket.on("ice-candidate", (data) => {
-    console.log("ICE candidate from:", data.callerId, "to:", data.receiverId);
-    console.log("Candidate:", data.candidate);
-    io.to(data.receiverId).emit("ice-candidate", data);
+    console.log("ICE candidate:", data.callerId, "->", data.receiverId);
+    io.to(data.receiverId).emit("ice-candidate", {
+      candidate: data.candidate,
+      callerId: data.callerId,
+    });
   });
 
   socket.on("end-call", (data) => {
@@ -253,7 +261,6 @@ io.on("connection", (socket) => {
     console.log("Call rejected by:", data.receiverId);
     io.to(data.callerId).emit("call-rejected", {
       receiverId: data.receiverId,
-      message: "Call was rejected",
     });
   });
 });
