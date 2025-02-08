@@ -315,6 +315,7 @@ const peerServer = ExpressPeerServer(server, {
   alive_timeout: 60000,
   key: "peerjs",
   concurrent_limit: 5000,
+  cleanup_out_msgs: 1000,
 });
 
 app.use("/peerjs", peerServer);
