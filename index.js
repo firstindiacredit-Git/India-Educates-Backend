@@ -65,15 +65,27 @@ connection.once("open", () => {
 // Create HTTP server
 const server = http.createServer(app);
 
+// Move PeerJS server before Socket.IO setup
+const peerServer = ExpressPeerServer(server, {
+  path: process.env.PEER_PATH || "/peerjs",
+  debug: true,
+  proxied: true,
+});
+
+app.use("/peerjs", peerServer);
+
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Be more specific in production
+    origin: "*",
     methods: ["GET", "POST"],
-    pingTimeout: 60000, // Add ping timeout
-    reconnection: true, // Enable reconnection
-    reconnectionAttempts: 5, // Set max reconnection attempts
+    credentials: true,
   },
+  path: process.env.SOCKET_PATH || "/socket.io/",
+  transports: ["websocket", "polling"],
+  pingTimeout: parseInt(process.env.WEBSOCKET_PING_TIMEOUT) || 60000,
+  pingInterval: parseInt(process.env.WEBSOCKET_PING_INTERVAL) || 25000,
+  allowEIO3: true,
 });
 
 // Socket.IO connection handling
@@ -303,14 +315,6 @@ server.listen(port, () => {
 
 // Add this to your existing environment variables
 const { TURN_SECRET, TURN_URLS } = process.env;
-
-// After creating your HTTP server, add:
-const peerServer = ExpressPeerServer(server, {
-  path: "/peerjs",
-  debug: true,
-});
-
-app.use("/peerjs", peerServer);
 
 // Add these event listeners
 peerServer.on("connection", (client) => {
