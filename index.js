@@ -305,7 +305,7 @@ server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
 
-// PeerServer Configuration
+// PeerServer Configuration'
 const peerServer = ExpressPeerServer(server, {
   debug: false,
   path: "/peerjs",
