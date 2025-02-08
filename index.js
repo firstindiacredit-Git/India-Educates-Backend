@@ -29,7 +29,6 @@ const { UserStatus, Notification } = require("./chatModel/chatModel");
 
 const cors = require("cors");
 const path = require("path");
-const { ExpressPeerServer } = require("peer");
 
 dotenv.config();
 
@@ -67,17 +66,12 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: "*", // Be more specific in production
     methods: ["GET", "POST"],
-    credentials: true,
+    pingTimeout: 60000, // Add ping timeout
+    reconnection: true, // Enable reconnection
+    reconnectionAttempts: 5, // Set max reconnection attempts
   },
-  allowEIO3: true,
-  path: "/socket.io/",
-  transports: ["websocket", "polling"],
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  upgradeTimeout: 30000,
-  maxHttpBufferSize: 1e8,
 });
 
 // Socket.IO connection handling
@@ -305,25 +299,5 @@ server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
 
-// Move PeerServer configuration before routes
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-  path: "/myapp",
-  proxied: true,
-  ssl: false,
-  allow_discovery: true,
-  alive_timeout: 60000,
-  key: "peerjs",
-  concurrent_limit: 5000,
-  cleanup_out_msgs: 1000,
-});
-
-app.use("/peerjs", peerServer);
-
-// Comment out or remove this until WebSocket is working
-// peerServer.on("connection", (client) => {
-//   const token = client.token;
-//   if (!validateToken(token)) {
-//     client.socket.close();
-//   }
-// });
+// Add this to your existing environment variables
+const { TURN_SECRET, TURN_URLS } = process.env;
