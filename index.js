@@ -24,6 +24,7 @@ const studentFormRoutes = require("./controller/studentForm");
 const jwt = require("jsonwebtoken");
 
 const http = require("http");
+const https = require("https");
 const { Server } = require("socket.io");
 const { UserStatus, Notification } = require("./chatModel/chatModel");
 
@@ -37,7 +38,7 @@ dotenv.config();
 //Middleware setup
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "https://192.168.1.24:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -62,30 +63,41 @@ connection.once("open", () => {
   console.log("MongoDB database connected");
 });
 
-// Create HTTP server
-const server = http.createServer(app);
+// Create HTTPS server
+const options = {
+  key: fs.readFileSync(path.join(__dirname, "certificates/key.pem")),
+  cert: fs.readFileSync(path.join(__dirname, "certificates/cert.pem")),
+};
 
-// Move PeerJS server before Socket.IO setup
+const server = https.createServer(options, app);
+
+// PeerJS server setup
 const peerServer = ExpressPeerServer(server, {
-  path: process.env.PEER_PATH || "/peerjs",
+  path: "/peerjs",
   debug: true,
-  proxied: true,
+  ssl: {
+    key: fs.readFileSync(path.join(__dirname, "certificates/key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "certificates/cert.pem")),
+  },
 });
-
-app.use("/peerjs", peerServer);
 
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: ["https://192.168.1.24:5173", "https://localhost:5173"],
     methods: ["GET", "POST"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   },
-  path: process.env.SOCKET_PATH || "/socket.io/",
-  transports: ["websocket", "polling"],
-  pingTimeout: parseInt(process.env.WEBSOCKET_PING_TIMEOUT) || 60000,
-  pingInterval: parseInt(process.env.WEBSOCKET_PING_INTERVAL) || 25000,
+  transports: ["polling", "websocket"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
   allowEIO3: true,
+  cookie: {
+    name: "io",
+    httpOnly: true,
+    secure: true,
+  },
 });
 
 // Socket.IO connection handling
@@ -301,11 +313,11 @@ app.use("/api", meetingController);
 app.use("/api", studentAuth);
 app.use("/api", studentFormRoutes);
 
-app.use(express.static(path.join(__dirname, "dist")));
+// app.use(express.static(path.join(__dirname, "dist")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "dist", "index.html"));
+// });
 
 //Port setup
 const port = process.env.APP_PORT || 5000;
