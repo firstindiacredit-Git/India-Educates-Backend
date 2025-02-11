@@ -98,20 +98,106 @@ const options = {
 // Create HTTPS server
 const server = https.createServer(options, app);
 
-// Socket.IO setup
+// Socket.IO setup with better connection handling
 const io = new Server(server, {
   cors: {
     origin: "*", // Be more specific in production
     methods: ["GET", "POST"],
-    pingTimeout: 60000, // Add ping timeout
-    reconnection: true, // Enable reconnection
-    reconnectionAttempts: 5, // Set max reconnection attempts
   },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ["websocket"], // Use only websocket
+  allowEIO3: true, // Allow Engine.IO 3
+  cookie: false, // Disable socket.io cookie
 });
 
-// Socket.IO connection handling
+// Keep track of connected users and their sockets
+const connectedUsers = new Map();
+
 io.on("connection", (socket) => {
-  // console.log('A user connected');
+  console.log("New socket connection:", socket.id);
+
+  // Handle joining rooms
+  socket.on("join_rooms", (data) => {
+    const { userId, userType } = data;
+    console.log(`User ${userId} joining rooms with socket ${socket.id}`);
+
+    // Store the socket ID for this user
+    connectedUsers.set(userId, socket.id);
+
+    // Join personal room
+    socket.join(userId);
+    console.log(`User ${userId} joined rooms with socket ${socket.id}`);
+  });
+
+  // Handle call initiation
+  socket.on("call-user", (data) => {
+    console.log("Call initiation request:", data);
+    const receiverSocketId = connectedUsers.get(data.receiverId);
+
+    if (receiverSocketId) {
+      const callRoom = `call_${data.callerId}_${data.receiverId}`;
+      socket.join(callRoom);
+      console.log(`Caller ${data.callerId} joined room: ${callRoom}`);
+
+      // Emit to specific socket ID
+      io.to(receiverSocketId).emit("incoming-call", {
+        callerId: data.callerId,
+        callerName: data.callerName,
+        type: data.type,
+        callRoom: callRoom,
+      });
+
+      console.log(
+        `Call offer sent to ${data.receiverId} via socket ${receiverSocketId}`
+      );
+    } else {
+      console.log(`No socket found for receiver: ${data.receiverId}`);
+      socket.emit("call-failed", { message: "User is not available" });
+    }
+  });
+
+  // Handle call acceptance
+  socket.on("call-accepted", (data) => {
+    const { callerId, receiverId, callRoom } = data;
+    socket.join(callRoom);
+    console.log(`Receiver ${receiverId} joined room: ${callRoom}`);
+
+    // Log all sockets in this room
+    const room = io.sockets.adapter.rooms.get(callRoom);
+    const socketsInRoom = room ? Array.from(room) : [];
+    console.log(`Current sockets in room ${callRoom}:`, socketsInRoom);
+
+    io.to(callRoom).emit("call-accepted", data);
+  });
+
+  // Handle call rejection
+  socket.on("call-rejected", (data) => {
+    const { callerId, receiverId, callRoom } = data;
+    console.log(`Call rejected in room ${callRoom} by ${receiverId}`);
+    io.to(callRoom).emit("call-rejected", data);
+  });
+
+  // Handle call end
+  socket.on("end-call", (data) => {
+    const { callerId, receiverId, callRoom } = data;
+    console.log(`Call ended in room ${callRoom}`);
+    io.to(callRoom).emit("call-ended");
+    socket.leave(callRoom);
+    console.log(`Socket ${socket.id} left room ${callRoom}`);
+  });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    // Remove user from connectedUsers
+    for (const [userId, socketId] of connectedUsers.entries()) {
+      if (socketId === socket.id) {
+        connectedUsers.delete(userId);
+        console.log(`User ${userId} disconnected`);
+        break;
+      }
+    }
+  });
 
   // Handle joining a project room
   socket.on("join project", (projectId) => {
@@ -222,56 +308,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", async () => {
-    try {
-      const user = await UserStatus.findOne({ socketId: socket.id });
-      if (user) {
-        user.isOnline = false;
-        user.lastSeen = new Date();
-        await user.save();
-
-        // Broadcast the status change
-        io.emit("user_status_changed", {
-          userId: user.userId,
-          isOnline: false,
-          lastSeen: user.lastSeen,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating user status on disconnect:", error);
-    }
-  });
-
   // Add notification handlers
   socket.on("join_notifications", (userId) => {
     socket.join(`notifications_${userId}`);
-  });
-
-  socket.on("call-user", (data) => {
-    io.to(data.receiverId).emit("incoming-call", {
-      callerId: data.callerId,
-      callerName: data.callerName,
-      type: data.type,
-    });
-  });
-
-  socket.on("call-accepted", (data) => {
-    io.to(data.callerId).emit("call-accepted", {
-      signal: data.signal,
-      receiverId: data.receiverId,
-    });
-  });
-
-  socket.on("call-rejected", (data) => {
-    io.to(data.callerId).emit("call-rejected", {
-      receiverId: data.receiverId,
-    });
-  });
-
-  socket.on("end-call", (data) => {
-    io.to(data.receiverId).emit("call-ended", {
-      callerId: data.callerId,
-    });
   });
 });
 
