@@ -203,39 +203,34 @@ io.on('connection', (socket) => {
 
   // Add these handlers for audio calls
   socket.on('call-user', (data) => {
-    console.log('Call user event received:', data);
     io.to(data.receiverId).emit('incoming-call', {
-      callerId: data.callerId,
-      callerName: data.callerName,
-      type: data.type,
-      signal: data.signal
+        callerId: data.callerId,
+        callerName: data.callerName,
+        type: data.type,
+        signal: data.signal
     });
   });
 
   socket.on('call-accepted', (data) => {
-    console.log('Call accepted event received:', data);
     io.to(data.callerId).emit('call-accepted', {
-      signal: data.signal,
-      receiverId: data.receiverId
+        signal: data.signal,
+        receiverId: data.receiverId
     });
   });
 
   socket.on('call-rejected', (data) => {
-    console.log('Call rejected event received:', data);
     io.to(data.callerId).emit('call-rejected', {
-      receiverId: data.receiverId
+        receiverId: data.receiverId
     });
   });
 
   socket.on('end-call', (data) => {
-    console.log('End call event received:', data);
     io.to(data.receiverId).emit('call-ended', {
-      callerId: data.callerId
+        callerId: data.callerId
     });
   });
 
   socket.on('ice-candidate', (data) => {
-    console.log('ICE candidate received:', data);
     io.to(data.to).emit('ice-candidate', {
         candidate: data.candidate
     });
