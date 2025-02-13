@@ -55,15 +55,25 @@ connection.once('open', () => {
 // Create HTTP server
 const server = http.createServer(app);
 
-// Socket.IO setup
+// Socket.IO setup with enhanced configuration
 const io = new Server(server, {
-  cors: {
-    origin: "*", // Be more specific in production
-    methods: ["GET", "POST"],
-    pingTimeout: 60000, // Add ping timeout
-    reconnection: true, // Enable reconnection
-    reconnectionAttempts: 5 // Set max reconnection attempts
-  }
+    cors: {
+        origin: process.env.NODE_ENV === 'production' 
+            ? process.env.FRONTEND_URL // Add this to your .env file
+            : "*",
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    transports: ['websocket', 'polling'],
+    allowEIO3: true,
+    maxHttpBufferSize: 1e8
+});
+
+// Enhanced error handling for socket connections
+io.engine.on("connection_error", (err) => {
+    console.log('Connection error:', err);
 });
 
 // Socket.IO connection handling
