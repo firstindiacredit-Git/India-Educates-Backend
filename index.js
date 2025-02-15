@@ -22,8 +22,7 @@ const meetingController = require("./controller/meetingScheuler");
 const studentAuth = require('./controller/studentAuth');
 const studentFormRoutes = require('./controller/studentForm');
 const jwt = require('jsonwebtoken');
-const audioAuth = require("./chatController/audioAuth");
-
+const zoomAuth = require("./chatController/zoomAuth");
 const http = require('http');
 const { Server } = require("socket.io");
 const { UserStatus, Notification } = require("./chatModel/chatModel");
@@ -153,6 +152,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('user_connected', async (userData) => {
+    // console.log('User connected:', userData);
     try {
       const socketId = socket.id;
       await UserStatus.findOneAndUpdate(
@@ -173,6 +173,9 @@ io.on('connection', (socket) => {
         isOnline: true,
         lastSeen: new Date()
       });
+
+      // Store the socket mapping
+      socket.userId = userData.userId;
     } catch (error) {
       console.error('Error updating user status:', error);
     }
@@ -193,6 +196,8 @@ io.on('connection', (socket) => {
           lastSeen: user.lastSeen
         });
       }
+
+      console.log('User disconnected:', socket.userId);
     } catch (error) {
       console.error('Error updating user status on disconnect:', error);
     }
@@ -203,44 +208,46 @@ io.on('connection', (socket) => {
     socket.join(`notifications_${userId}`);
   });
 
-  // Add these handlers for audio calls
-  socket.on('call-user', (data) => {
-    io.to(data.receiverId).emit('incoming-call', {
-        callerId: data.callerId,
-        callerName: data.callerName,
-        type: data.type,
-        signal: data.signal
-    });
-  });
-
-  socket.on('call-accepted', (data) => {
-    io.to(data.callerId).emit('call-accepted', {
-        signal: data.signal,
-        receiverId: data.receiverId
-    });
-  });
-
-  socket.on('call-rejected', (data) => {
-    io.to(data.callerId).emit('call-rejected', {
-        receiverId: data.receiverId
-    });
-  });
-
-  socket.on('end-call', (data) => {
-    io.to(data.receiverId).emit('call-ended', {
-        callerId: data.callerId
-    });
-  });
-
-  socket.on('ice-candidate', (data) => {
-    io.to(data.to).emit('ice-candidate', {
-        candidate: data.candidate
-    });
-  });
-
   // Add disconnect handler
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    // console.log('User disconnected:', socket.id);
+  });
+
+  // Video call request handler
+  socket.on('video_call_request', (data) => {
+    console.log('Video call request received:', data);
+    const { senderId, receiverId, senderName } = data;
+    
+    // Emit to the receiver
+    io.to(receiverId).emit('incoming_video_call', {
+      senderId,
+      receiverId,
+      senderName
+    });
+    
+    console.log('Video call request sent to:', receiverId);
+  });
+
+  // Video call accepted handler
+  socket.on('video_call_accepted', (data) => {
+    console.log('Video call accepted:', data);
+    const { senderId, receiverId } = data;
+    
+    io.to(senderId).emit('video_call_accepted', {
+      receiverId,
+      timestamp: Date.now()
+    });
+    
+    console.log('Acceptance sent to:', senderId);
+  });
+
+  // Video call rejected handler
+  socket.on('video_call_rejected', (data) => {
+    console.log('Video call rejected:', data);
+    const { senderId } = data;
+    
+    io.to(senderId).emit('video_call_rejected');
+    console.log('Rejection sent to:', senderId);
   });
 });
 
@@ -270,7 +277,7 @@ app.use("/api", groupAuth);
 app.use("/api", meetingController);
 app.use("/api", studentAuth);
 app.use('/api', studentFormRoutes);
-app.use("/api", audioAuth);
+app.use("/api", zoomAuth);
 
 app.use(express.static(path.join(__dirname, 'dist')));
 
