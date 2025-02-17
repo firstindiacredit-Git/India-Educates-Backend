@@ -197,7 +197,7 @@ io.on('connection', (socket) => {
         });
       }
 
-      console.log('User disconnected:', socket.userId);
+      // console.log('User disconnected:', socket.userId);
     } catch (error) {
       console.error('Error updating user status on disconnect:', error);
     }
@@ -290,5 +290,4 @@ const port = process.env.APP_PORT || 5000;
 server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
-
 
