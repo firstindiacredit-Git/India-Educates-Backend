@@ -249,6 +249,28 @@ io.on('connection', (socket) => {
     io.to(senderId).emit('video_call_rejected');
     console.log('Rejection sent to:', senderId);
   });
+
+  // WebRTC signaling
+  socket.on('offer', (data) => {
+    socket.to(data.receiverId).emit('offer', {
+      offer: data.offer,
+      senderId: data.senderId
+    });
+  });
+
+  socket.on('answer', (data) => {
+    socket.to(data.receiverId).emit('answer', {
+      answer: data.answer,
+      senderId: data.senderId
+    });
+  });
+
+  socket.on('ice-candidate', (data) => {
+    socket.to(data.receiverId).emit('ice-candidate', {
+      candidate: data.candidate,
+      senderId: data.senderId
+    });
+  });
 });
 
 // Make io accessible to our router
