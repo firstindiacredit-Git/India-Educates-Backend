@@ -33,21 +33,66 @@ exports.loginUser = async (req, res) => {
   const userIp = req.userIp;
 
   try {
-    const user = await User.findOne({ email });
+    let user;
+    let Model;
 
-    if (user) {
-      const match = await bcrypt.compare(password, user.password);
-      if (match && user.role.toString() === role) {
-        const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET);
-        res.json({ token, user, userIp });
-      } else {
-        res.status(401).json('Incorrect email, password, or role');
-      }
-    } else {
-      res.status(401).json('User not found');
+    // Determine which model to use based on role
+    switch (role) {
+      case 'superadmin':
+      case 'admin':
+        Model = require('../userModel/adminUserModel');
+        break;
+      case 'employee':
+        Model = require('../model/employeeModel');
+        break;
+      case 'client':
+        Model = require('../model/clientModel');
+        break;
+      case 'student':
+        Model = require('../model/studentModel');
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid role' });
     }
+
+    // Find user based on email and role
+    if (role === 'superadmin' || role === 'admin') {
+      user = await Model.findOne({ email, role });
+    } else {
+      // For other roles, use their specific email field names
+      const emailField = role === 'client' ? 'clientEmail' : 'emailid';
+      user = await Model.findOne({ [emailField]: email });
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Compare password based on role
+    let isValidPassword;
+    if (role === 'superadmin' || role === 'admin') {
+      isValidPassword = await bcrypt.compare(password, user.password);
+    } else {
+      // For other roles, compare direct password (assuming they're stored as plain text)
+      const passwordField = role === 'client' ? 'clientPassword' : 'password';
+      isValidPassword = password === user[passwordField];
+    }
+
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id, role: role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ token, user, userIp });
   } catch (error) {
-    res.status(400).json('Error: ' + error.message);
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
