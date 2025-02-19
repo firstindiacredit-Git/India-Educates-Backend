@@ -6,21 +6,9 @@ const employeeSchema = new Schema({
         type: String,
         required: true,
     },
-    employeeCompany: {
-        type: String,
-    },
     employeeImage: {
         type: String,
         required: true
-    },
-    resume: {
-        type: String,
-    },
-    aadhaarCard: {
-        type: String,
-    },
-    panCard: {
-        type: String,
     },
     employeeId: {
         type: String,
@@ -29,9 +17,6 @@ const employeeSchema = new Schema({
     },
     joiningDate: {
         type: Date,
-    },
-    username: {
-        type: String,
     },
     password: {
         type: String,
@@ -45,23 +30,8 @@ const employeeSchema = new Schema({
     phone: {
         type: String,
     },
-    department: {
-        type: String,
-    },
-    designation: {
-        type: String,
-    },
     description: {
         type: String
-    },
-    socialLinks: {
-        linkedin: { type: String },
-        instagram: { type: String },
-        youtube: { type: String },
-        facebook: { type: String },
-        github: { type: String },
-        website: { type: String },
-        other: { type: String }
     },
     bankDetails: {
         accountNumber: { type: String },
