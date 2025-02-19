@@ -28,14 +28,6 @@ const invoiceSchema = new Schema({
         type: String,
         required: true
     },
-    country: {
-        type: String,
-        required: true
-    },
-    state: {
-        type: String,
-        required: true
-    },
     table: [{
         item: {
             type: String,
@@ -46,38 +38,27 @@ const invoiceSchema = new Schema({
             required: true
         },
         rate: {
-            type: String,
+            type: Number,
             required: true
         },
         quantity: {
             type: Number,
             required: true
         },
-        gstPercentage: {
+        total: {
             type: Number,
             required: true
-        },
-        igst: {
-            type: Number,
-        },
-        cgst: {
-            type: Number,
-        },
-        sgst: {
-            type: Number,
-        },
+        }
     }],
     amount: {
         type: Number,
-        required: true
-    },
-    totalGst: {
-        type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     total: {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     bankDetails: {
         accountName: {
