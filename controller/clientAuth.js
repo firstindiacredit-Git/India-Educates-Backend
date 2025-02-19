@@ -24,11 +24,11 @@ router.get('/totalClients', async (req, res) => {
 router.post('/clients', uploadClient.single("clientImage"), async (req, res) => {
   try {
     const path = req.file?.path;
-    // let newPath = path?.replace('uploads\\', "");
-    // if (newPath === undefined || newPath === null) {
-    //   newPath = "default.jpeg";
-    // }
-    req.body.clientImage = path;
+    let newPath = path?.replace('uploads\\', "");
+    if (newPath === undefined || newPath === null) {
+      newPath = "default.jpeg";
+    }
+    req.body.clientImage = newPath;
     
     // Extract social links from request body
     const socialLinks = {

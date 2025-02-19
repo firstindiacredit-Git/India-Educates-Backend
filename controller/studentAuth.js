@@ -32,7 +32,7 @@ router.post('/students', upload, async (req, res) => {
         const studentData = req.body;
 
         if (files.studentImage) {
-            let newPath = files.studentImage[0].path;
+            let newPath = files.studentImage[0].path.replace('uploads\\', "");
             studentData.studentImage = newPath;
         } else {
             studentData.studentImage = "default.jpeg";
