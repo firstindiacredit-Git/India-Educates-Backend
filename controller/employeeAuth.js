@@ -48,12 +48,23 @@ router.post('/employees', upload, async (req, res) => {
         const files = req.files;
         const employeeData = req.body;
 
+        // Handle employee image
         if (files.employeeImage) {
             let newPath = files.employeeImage[0].path.replace('uploads\\', "");
             employeeData.employeeImage = newPath;
         } else {
             employeeData.employeeImage = "default.jpeg";
         }
+
+        // Handle address details - Explicitly create the address object
+        employeeData.address = {
+            street: employeeData.street || '',
+            city: employeeData.city || '',
+            state: employeeData.state || '',
+            country: employeeData.country || '',
+            postalCode: employeeData.postalCode || ''
+        };
+
 
         // Handle bank details
         employeeData.bankDetails = {
@@ -66,26 +77,34 @@ router.post('/employees', upload, async (req, res) => {
             paymentApp: employeeData.paymentApp || ''
         };
 
+        // Handle QR code if present
         if (files.qrCode) {
             employeeData.bankDetails.qrCode = files.qrCode[0].path
                 .replace(/\\/g, '/')
                 .replace('uploads/', '');
         }
 
-        // Remove individual bank detail fields
-        delete employeeData.bankName;
-        delete employeeData.accountHolderName;
-        delete employeeData.accountNumber;
-        delete employeeData.ifscCode;
-        delete employeeData.accountType;
-        delete employeeData.upiId;
-        delete employeeData.paymentApp;
+        // Remove individual fields that are now in nested objects
+        const fieldsToDelete = [
+            'bankName', 'accountHolderName', 'accountNumber', 'ifscCode', 
+            'accountType', 'upiId', 'paymentApp', 'street', 'city', 
+            'state', 'country', 'postalCode'
+        ];
+        
+        fieldsToDelete.forEach(field => delete employeeData[field]);
 
+        // Create and save employee
         const employee = new Employee(employeeData);
+        
+        
         const savedEmployee = await employee.save();
+        
+        // Send email and return response
         sendEmail(savedEmployee);
         res.status(201).json(savedEmployee);
     } catch (err) {
+        console.error('Error creating employee:', err);
+        console.error('Request body:', req.body);
         res.status(400).json({ message: err.message });
     }
 });
@@ -226,40 +245,55 @@ router.put('/employees/:employeeId', upload, async (req, res) => {
         const files = req.files;
         const updatedData = req.body;
 
-        // Handle file uploads if they exist
+        // Handle file uploads
         if (files && files.employeeImage) {
             updatedData.employeeImage = files.employeeImage[0].path.replace('uploads\\', "");
         }
 
         // Handle bank details
         const bankDetails = {
-            bankName: Array.isArray(updatedData.bankName) ? updatedData.bankName[0] : (updatedData.bankName || existingEmployee.bankDetails?.bankName || ''),
-            accountHolderName: Array.isArray(updatedData.accountHolderName) ? updatedData.accountHolderName[0] : (updatedData.accountHolderName || existingEmployee.bankDetails?.accountHolderName || ''),
-            accountNumber: Array.isArray(updatedData.accountNumber) ? updatedData.accountNumber[0] : (updatedData.accountNumber || existingEmployee.bankDetails?.accountNumber || ''),
-            ifscCode: Array.isArray(updatedData.ifscCode) ? updatedData.ifscCode[0] : (updatedData.ifscCode || existingEmployee.bankDetails?.ifscCode || ''),
-            accountType: Array.isArray(updatedData.accountType) ? updatedData.accountType[0] : (updatedData.accountType || existingEmployee.bankDetails?.accountType || ''),
-            upiId: Array.isArray(updatedData.upiId) ? updatedData.upiId[0] : (updatedData.upiId || existingEmployee.bankDetails?.upiId || ''),
-            paymentApp: Array.isArray(updatedData.paymentApp) ? updatedData.paymentApp[0] : (updatedData.paymentApp || existingEmployee.bankDetails?.paymentApp || '')
+            bankName: Array.isArray(updatedData.bankName) ? updatedData.bankName.join(', ') : (updatedData.bankName || existingEmployee.bankDetails?.bankName || ''),
+            accountHolderName: Array.isArray(updatedData.accountHolderName) ? updatedData.accountHolderName.join(', ') : (updatedData.accountHolderName || existingEmployee.bankDetails?.accountHolderName || ''),
+            accountNumber: Array.isArray(updatedData.accountNumber) ? updatedData.accountNumber.join(', ') : (updatedData.accountNumber || existingEmployee.bankDetails?.accountNumber || ''),
+            ifscCode: Array.isArray(updatedData.ifscCode) ? updatedData.ifscCode.join(', ') : (updatedData.ifscCode || existingEmployee.bankDetails?.ifscCode || ''),
+            accountType: Array.isArray(updatedData.accountType) ? updatedData.accountType.join(', ') : (updatedData.accountType || existingEmployee.bankDetails?.accountType || ''),
+            upiId: Array.isArray(updatedData.upiId) ? updatedData.upiId.join(', ') : (updatedData.upiId || existingEmployee.bankDetails?.upiId || ''),
+            paymentApp: Array.isArray(updatedData.paymentApp) ? updatedData.paymentApp.join(', ') : (updatedData.paymentApp || existingEmployee.bankDetails?.paymentApp || ''),
+            qrCode: existingEmployee.bankDetails?.qrCode || ''
         };
 
+        // Handle address details - preserve existing values and handle arrays
+        const address = {
+            street: Array.isArray(updatedData.street) ? updatedData.street.join(', ') : (updatedData.street || existingEmployee.address?.street || ''),
+            city: Array.isArray(updatedData.city) ? updatedData.city.join(', ') : (updatedData.city || existingEmployee.address?.city || ''),
+            state: Array.isArray(updatedData.state) ? updatedData.state.join(', ') : (updatedData.state || existingEmployee.address?.state || ''),
+            country: Array.isArray(updatedData.country) ? updatedData.country.join(', ') : (updatedData.country || existingEmployee.address?.country || ''),
+            postalCode: Array.isArray(updatedData.postalCode) ? updatedData.postalCode.join(', ') : (updatedData.postalCode || existingEmployee.address?.postalCode || '')
+        };
+
+        // console.log('Updated address data:', address); // Debug log
+
+        // Update QR code if new one is uploaded
         if (files && files.qrCode) {
             bankDetails.qrCode = files.qrCode[0].path
                 .replace(/\\/g, '/')
                 .replace('uploads/', '');
         }
 
-        // Remove individual bank detail fields
-        delete updatedData.bankName;
-        delete updatedData.accountHolderName;
-        delete updatedData.accountNumber;
-        delete updatedData.ifscCode;
-        delete updatedData.accountType;
-        delete updatedData.upiId;
-        delete updatedData.paymentApp;
+        // Remove individual fields
+        const fieldsToDelete = [
+            'bankName', 'accountHolderName', 'accountNumber', 'ifscCode', 
+            'accountType', 'upiId', 'paymentApp', 'street', 'city', 
+            'state', 'country', 'postalCode'
+        ];
+        
+        fieldsToDelete.forEach(field => delete updatedData[field]);
 
-        // Add the bank details object to the update data
+        // Add the nested objects to the update data
         updatedData.bankDetails = bankDetails;
+        updatedData.address = address;
 
+        // Update employee
         const updatedEmployee = await Employee.findByIdAndUpdate(
             req.params.employeeId,
             { $set: updatedData },
@@ -269,6 +303,7 @@ router.put('/employees/:employeeId', upload, async (req, res) => {
         res.json(updatedEmployee);
     } catch (err) {
         console.error('Update error:', err);
+        console.error('Request body:', req.body); // Debug log
         res.status(400).json({ message: err.message });
     }
 });

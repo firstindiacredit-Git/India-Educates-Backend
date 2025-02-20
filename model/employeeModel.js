@@ -8,7 +8,7 @@ const employeeSchema = new Schema({
     },
     employeeImage: {
         type: String,
-        required: true
+        // required: true
     },
     employeeId: {
         type: String,
@@ -32,6 +32,13 @@ const employeeSchema = new Schema({
     },
     description: {
         type: String
+    },
+    address: {
+        street: { type: String },
+        city: { type: String },
+        state: { type: String },
+        country: { type: String },
+        postalCode: { type: String }
     },
     bankDetails: {
         accountNumber: { type: String },
