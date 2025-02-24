@@ -26,7 +26,7 @@ const zoomAuth = require("./chatController/zoomAuth");
 const http = require('http');
 const { Server } = require("socket.io");
 const { UserStatus, Notification } = require("./chatModel/chatModel");
-
+const iccrRoutes = require('./controller/iccrAuth');
 
 const cors = require("cors");
 const path = require("path");
@@ -300,6 +300,7 @@ app.use("/api", meetingController);
 app.use("/api", studentAuth);
 app.use('/api', studentFormRoutes);
 app.use("/api", zoomAuth);
+app.use('/api', iccrRoutes);
 
 app.use(express.static(path.join(__dirname, 'dist')));
 

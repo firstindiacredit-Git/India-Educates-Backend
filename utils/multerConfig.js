@@ -1,5 +1,6 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // File filter to check the allowed file types
 const fileFilter = (req, file, cb) => {
@@ -144,6 +145,56 @@ const chatStorage = multer.diskStorage({
   }
 });
 
+const iccrStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    let uploadPath = './uploads/iccr';
+    
+    // Handle different types of ICCR documents
+    switch (file.fieldname) {
+      case 'studentPhoto':
+        uploadPath = './uploads/iccr/photos';
+        break;
+      case 'permanentUniqueId':
+        uploadPath = './uploads/iccr/ids';
+        break;
+      case 'passportCopy':
+        uploadPath = './uploads/iccr/passports';
+        break;
+      case 'gradeXMarksheet':
+        uploadPath = './uploads/iccr/academics';
+        break;
+      case 'gradeXIIMarksheet':
+        uploadPath = './uploads/iccr/academics';
+        break;
+      case 'medicalFitnessCertificate':
+        uploadPath = './uploads/iccr/medical';
+        break;
+      case 'englishTranslationOfDocuments':
+        uploadPath = './uploads/iccr/translations';
+        break;
+      case 'englishAsSubjectDocument':
+        uploadPath = './uploads/iccr/english';
+        break;
+      case 'anyOtherDocument':
+        uploadPath = './uploads/iccr/others';
+        break;
+      case 'signature':
+        uploadPath = './uploads/iccr/signatures';
+        break;
+      default:
+        uploadPath = './uploads/iccr/others';
+    }
+    
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const uploadEmployee = multer({
   storage: employeeStorage,
   fileFilter: fileFilter,
@@ -195,7 +246,6 @@ const uploadInvoice = multer({
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
 });
 
-
 const uploadChat = multer({
   storage: chatStorage,
   fileFilter: fileFilter,
@@ -208,4 +258,21 @@ const uploadChat = multer({
   { name: 'backgroundImage', maxCount: 1 }
 ]);
 
-module.exports = { uploadEmployee, uploadStudent, uploadProject, uploadTask, uploadClient, uploadMessage, uploadProfile, uploadChat, uploadInvoice }
+const uploadICCR = multer({
+  storage: iccrStorage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+module.exports = { 
+  uploadEmployee, 
+  uploadStudent, 
+  uploadProject, 
+  uploadTask, 
+  uploadClient, 
+  uploadMessage, 
+  uploadProfile, 
+  uploadChat, 
+  uploadInvoice,
+  uploadICCR 
+};
