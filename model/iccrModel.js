@@ -123,6 +123,20 @@ const iccrSchema = new Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-const ICCR = mongoose.model("ICCR", iccrSchema);
 
-module.exports = ICCR;
+const iccrForm1Schema = new Schema({
+    // Personal Information
+    fullName: { type: String,  },
+    countryCode: { type: String,  },
+    mobileNumber: { type: String,  },
+    email: { type: String,  },
+    dateOfBirth: { type: Date,  },
+    gender: { type: String,  },
+    lastQualification: { type: String,  },
+    course: { type: String,  }
+});
+
+const ICCR = mongoose.model("ICCR", iccrSchema);
+const ICCRForm1 = mongoose.model("ICCRForm1", iccrForm1Schema);
+
+module.exports = { ICCR, ICCRForm1 };
