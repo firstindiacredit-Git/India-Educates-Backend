@@ -19,30 +19,57 @@ router.get('/totalClients', async (req, res) => {
   }
 });
 
-
 // Create a new client
-router.post('/clients', uploadClient.single("clientImage"), async (req, res) => {
+router.post('/clients', uploadClient.fields([
+  { name: 'clientImage', maxCount: 1 },
+  { name: 'clientDL', maxCount: 1 },
+  { name: 'clientPassport', maxCount: 1 },
+  { name: 'clientAgentID', maxCount: 1 },
+  { name: 'clientGovtID', maxCount: 1 }
+]), async (req, res) => {
   try {
-    const path = req.file?.path;
-    let newPath = path?.replace('uploads\\', "");
-    if (newPath === undefined || newPath === null) {
-      newPath = "default.jpeg";
+    // Process clientImage
+    let clientImage = 'default.jpeg';
+    if (req.files.clientImage && req.files.clientImage[0]) {
+      const path = req.files.clientImage[0].path;
+      clientImage = path.replace('uploads\\', "");
     }
-    req.body.clientImage = newPath;
+    req.body.clientImage = clientImage;
     
-    // Extract social links from request body
-    const socialLinks = {
-      linkedin: req.body.linkedin || '',
-      instagram: req.body.instagram || '',
-      youtube: req.body.youtube || '',
-      facebook: req.body.facebook || '',
-      pinterest: req.body.pinterest || '',
-      github: req.body.github || '',
-      website: req.body.website || '',
-      other: req.body.other || ''
+    // Process other document images
+    if (req.files.clientDL && req.files.clientDL[0]) {
+      const path = req.files.clientDL[0].path;
+      req.body.clientDL = path.replace('uploads\\', "");
+    }
+    
+    if (req.files.clientPassport && req.files.clientPassport[0]) {
+      const path = req.files.clientPassport[0].path;
+      req.body.clientPassport = path.replace('uploads\\', "");
+    }
+    
+    if (req.files.clientAgentID && req.files.clientAgentID[0]) {
+      const path = req.files.clientAgentID[0].path;
+      req.body.clientAgentID = path.replace('uploads\\', "");
+    }
+    
+    if (req.files.clientGovtID && req.files.clientGovtID[0]) {
+      const path = req.files.clientGovtID[0].path;
+      req.body.clientGovtID = path.replace('uploads\\', "");
+    }
+    
+    // Extract bank details from request body
+    const bankDetails = {
+      accountNumber: req.body.accountNumber || '',
+      accountType: req.body.accountType || '',
+      accountHolderName: req.body.accountHolderName || '',
+      ifscCode: req.body.ifscCode || '',
+      bankName: req.body.bankName || '',
+      upiId: req.body.upiId || '',
+      qrCode: req.body.qrCode || '',
+      paymentApp: req.body.paymentApp || ''
     };
     
-    req.body.socialLinks = socialLinks;
+    req.body.bankDetails = bankDetails;
     
     const client = new Client(req.body);
     await client.save();
@@ -125,7 +152,6 @@ router.post("/clientlogin", async (req, res) => {
   }
 });
 
-
 // Get all clients
 router.get('/clients', async (req, res) => {
   try {
@@ -176,9 +202,14 @@ router.get("/search", async (req, res) => {
   }
 });
 
-
 // Update a client by ID (with file handling)
-router.put('/clients/:id', uploadClient.single("clientImage"), async (req, res) => {
+router.put('/clients/:id', uploadClient.fields([
+  { name: 'clientImage', maxCount: 1 },
+  { name: 'clientDL', maxCount: 1 },
+  { name: 'clientPassport', maxCount: 1 },
+  { name: 'clientAgentID', maxCount: 1 },
+  { name: 'clientGovtID', maxCount: 1 }
+]), async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
 
@@ -186,27 +217,48 @@ router.put('/clients/:id', uploadClient.single("clientImage"), async (req, res) 
       return res.status(404).send({ error: 'Client not found' });
     }
 
-    // Handle image update
-    if (req.file) {
-      const newPath = req.file.path.replace('uploads\\', "");
+    // Handle image updates
+    if (req.files.clientImage && req.files.clientImage[0]) {
+      const newPath = req.files.clientImage[0].path.replace('uploads\\', "");
       client.clientImage = newPath;
     }
+    
+    if (req.files.clientDL && req.files.clientDL[0]) {
+      const newPath = req.files.clientDL[0].path.replace('uploads\\', "");
+      client.clientDL = newPath;
+    }
+    
+    if (req.files.clientPassport && req.files.clientPassport[0]) {
+      const newPath = req.files.clientPassport[0].path.replace('uploads\\', "");
+      client.clientPassport = newPath;
+    }
+    
+    if (req.files.clientAgentID && req.files.clientAgentID[0]) {
+      const newPath = req.files.clientAgentID[0].path.replace('uploads\\', "");
+      client.clientAgentID = newPath;
+    }
+    
+    if (req.files.clientGovtID && req.files.clientGovtID[0]) {
+      const newPath = req.files.clientGovtID[0].path.replace('uploads\\', "");
+      client.clientGovtID = newPath;
+    }
 
-    // Update social links
-    client.socialLinks = {
-      linkedin: req.body.linkedin || client.socialLinks.linkedin,
-      instagram: req.body.instagram || client.socialLinks.instagram,
-      youtube: req.body.youtube || client.socialLinks.youtube,
-      facebook: req.body.facebook || client.socialLinks.facebook,
-      pinterest: req.body.pinterest || client.socialLinks.pinterest,
-      github: req.body.github || client.socialLinks.github,
-      website: req.body.website || client.socialLinks.website,
-      other: req.body.other || client.socialLinks.other
+    // Update bank details
+    client.bankDetails = {
+      accountNumber: req.body.accountNumber || client.bankDetails?.accountNumber || '',
+      accountType: req.body.accountType || client.bankDetails?.accountType || '',
+      accountHolderName: req.body.accountHolderName || client.bankDetails?.accountHolderName || '',
+      ifscCode: req.body.ifscCode || client.bankDetails?.ifscCode || '',
+      bankName: req.body.bankName || client.bankDetails?.bankName || '',
+      upiId: req.body.upiId || client.bankDetails?.upiId || '',
+      qrCode: req.body.qrCode || client.bankDetails?.qrCode || '',
+      paymentApp: req.body.paymentApp || client.bankDetails?.paymentApp || ''
     };
 
     // Update other fields
-    const basicFields = ['clientName', 'businessName', 'clientEmail', 
-                        'clientPassword', 'clientPhone', 'clientAddress', 'clientGst'];
+    const basicFields = ['clientName', 'clientEmail', 'clientPassword', 
+                        'clientPhone', 'clientAddress', 'clientDL', 
+                        'clientPassport', 'clientAgentID'];
     basicFields.forEach(field => {
       if (req.body[field]) {
         client[field] = req.body[field];

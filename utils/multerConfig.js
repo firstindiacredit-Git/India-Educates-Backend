@@ -86,14 +86,30 @@ const taskStorage = multer.diskStorage({
 
 const clientStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/client');
+    let uploadPath = './uploads/client';
+    
+    // Handle different types of client documents
+    if (file.fieldname === 'clientImage') {
+      uploadPath = './uploads/client/profiles';
+    } else if (file.fieldname === 'clientDL') {
+      uploadPath = './uploads/client/driving-license';
+    } else if (file.fieldname === 'clientPassport') {
+      uploadPath = './uploads/client/passport';
+    } else if (file.fieldname === 'clientAgentID') {
+      uploadPath = './uploads/client/agent-id';
+    } else if (file.fieldname === 'clientGovtID') {
+      uploadPath = './uploads/client/govt-id';
+    }
+    
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + file.originalname;
     cb(null, file.fieldname + '-' + uniqueSuffix);
   }
 });
-
 
 const messageStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -224,7 +240,7 @@ const uploadTask = multer({
 
 const uploadClient = multer({
   storage: clientStorage,
-  fileFilter: fileFilter, // Apply the file filter 
+  fileFilter: fileFilter, 
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
 });
 
