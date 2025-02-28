@@ -9,7 +9,7 @@ router.post('/form1', async (req, res) => {
         const existingUser = await ICCRForm1.findOne({
             $or: [
                 { email: req.body.email },
-                { phoneNumber: req.body.phoneNumber }
+                { mobileNumber: req.body.mobileNumber }
             ]
         });
 
@@ -71,6 +71,29 @@ router.get('/form1/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error fetching Form 1",
+            error: error.message
+        });
+    }
+});
+
+// Delete a specific ICCR Form1 application by ID
+router.delete('/form1/:id', async (req, res) => {
+    try {
+        const deletedForm = await ICCRForm1.findByIdAndDelete(req.params.id);
+        if (!deletedForm) {
+            return res.status(404).json({
+                success: false,
+                message: "Form not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Form deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error deleting Form",
             error: error.message
         });
     }
