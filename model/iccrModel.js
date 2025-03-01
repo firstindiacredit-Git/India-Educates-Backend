@@ -3,46 +3,46 @@ const Schema = mongoose.Schema;
 
 const iccrSchema = new Schema({
     // Personal Information
-    fullName: { type: String,  },
+    fullName: { type: String, },
     studentPhoto: { type: String }, // URL/path to uploaded photo
-    dateOfBirth: { type: Date,  },
-    gender: { type: String,  },
-    placeOfBirth: { type: String,  },
-    mobileNumber: { type: String,  },
+    dateOfBirth: { type: Date, },
+    gender: { type: String, },
+    placeOfBirth: { type: String, },
+    mobileNumber: { type: String, },
     whatsappNumber: { type: String },
-    email: { type: String,  },
+    email: { type: String, },
 
     // Passport Details
-    passport: { type: String,  },
-    passportCountry: { type: String,  },
-    passportIssueDate: { type: Date,  },
-    passportExpiryDate: { type: Date,  },
+    passport: { type: String, },
+    passportCountry: { type: String, },
+    passportIssueDate: { type: Date, },
+    passportExpiryDate: { type: Date, },
 
     // Address Information
-    addressLine: { type: String,  },
-    city: { type: String,  },
-    state: { type: String,  },
-    addressCountry: { type: String,  },
-    zipcode: { type: String,  },
+    addressLine: { type: String, },
+    city: { type: String, },
+    state: { type: String, },
+    addressCountry: { type: String, },
+    zipcode: { type: String, },
 
     // Parent Information
-    fatherName: { type: String,  },
-    fatherPhone: { type: String,  },
-    fatherEmail: { type: String,  },
-    motherName: { type: String,  },
-    motherPhone: { type: String,  },
-    motherEmail: { type: String,  },
+    fatherName: { type: String, },
+    fatherPhone: { type: String, },
+    fatherEmail: { type: String, },
+    motherName: { type: String, },
+    motherPhone: { type: String, },
+    motherEmail: { type: String, },
 
     //English Proficiency-1
-    englishProficiency1: { type: String,  },
-    tillWhatLevel1: { type: String,  },
-    score1: { type: String,  },
+    englishProficiency1: { type: String, },
+    tillWhatLevel1: { type: String, },
+    score1: { type: String, },
 
     //English Proficiency-2
-    englishProficiency2: { type: String,  },
-    toeflScore: { type: String,  },
-    ieltsScore: { type: String,  },
-    duolingoScore: { type: String,  },
+    englishProficiency2: { type: String, },
+    toeflScore: { type: String, },
+    ieltsScore: { type: String, },
+    duolingoScore: { type: String, },
 
     //Previous Educational Qualifications
     previousEducations: [{
@@ -56,12 +56,12 @@ const iccrSchema = new Schema({
     }],
 
     //Essay
-    essay: { type: String,  },
+    essay: { type: String, },
 
     //Course Information
-    academicYear: { type: String,  },
-    levelOfCourse: { type: String,  }, // UG/PG
-    courseMainStream: { type: String,  }, // Science/Commerce/Arts
+    academicYear: { type: String, },
+    levelOfCourse: { type: String, }, // UG/PG
+    courseMainStream: { type: String, }, // Science/Commerce/Arts
 
     //University Preferences
     universityPreferences: [{
@@ -91,14 +91,14 @@ const iccrSchema = new Schema({
     }],
 
     // Additional Information
-    travelledInIndia: { type: String,  },
-    residenceInIndia: { type: String,  },
-    marriedToIndian: { type: String,  },
-    internationalDrivingLicence: { type: String,  },
-    otherInformation: { type: String,  },
-    dateOfApplication: { type: Date,  },
-    placeOfApplication: { type: String,  },
-    signature: { type: String,  },//File path
+    travelledInIndia: { type: String, },
+    residenceInIndia: { type: String, },
+    marriedToIndian: { type: String, },
+    internationalDrivingLicence: { type: String, },
+    otherInformation: { type: String, },
+    dateOfApplication: { type: Date, },
+    placeOfApplication: { type: String, },
+    signature: { type: String, },//File path
 
 
     // Required Documents
@@ -117,7 +117,7 @@ const iccrSchema = new Schema({
         enum: ['Pending', 'Under Review', 'Approved', 'Rejected'],
         default: 'Pending'
     },
-    
+
     // Timestamps
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
@@ -126,14 +126,16 @@ const iccrSchema = new Schema({
 
 const iccrForm1Schema = new Schema({
     // Personal Information
-    fullName: { type: String,  },
-    countryCode: { type: String,  },
-    mobileNumber: { type: String,  },
-    email: { type: String,  },
-    dateOfBirth: { type: Date,  },
-    gender: { type: String,  },
-    lastQualification: { type: String,  },
-    course: { type: String,  }
+    fullName: { type: String, },
+    countryCode: { type: String, },
+    mobileNumber: { type: String, },
+    email: { type: String, },
+    dateOfBirth: { type: Date, },
+    gender: { type: String, },
+    lastQualification: { type: String, },
+    course: { type: String, },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 const ICCR = mongoose.model("ICCR", iccrSchema);
