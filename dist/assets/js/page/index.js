@@ -105,12 +105,15 @@ $(function() {
             },
         }
 
-    var chart = new ApexCharts(
-            document.querySelector("#apex-timeline"),
-            options
-        );
-        
-        chart.render();
+        // Check if the element exists before initializing the chart
+        if (document.querySelector("#apex-timeline")) {
+            var chart = new ApexCharts(
+                document.querySelector("#apex-timeline"),
+                options
+            );
+            
+            chart.render();
+        }
     });
 
     // Income Analytics
@@ -175,8 +178,11 @@ $(function() {
             }
         };
 
-        var chart = new ApexCharts(document.querySelector("#incomeanalytics"), options);
-        chart.render();
+        // Check if the element exists before initializing the chart
+        if (document.querySelector("#incomeanalytics")) {
+            var chart = new ApexCharts(document.querySelector("#incomeanalytics"), options);
+            chart.render();
+        }
     }); 
     
 });
