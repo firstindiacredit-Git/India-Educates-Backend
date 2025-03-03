@@ -28,6 +28,7 @@ const { Server } = require("socket.io");
 const { UserStatus, Notification } = require("./chatModel/chatModel");
 const iccrForm2 = require('./controller/iccrForm2Auth');
 const iccrForm1 = require('./controller/iccrForm1Auth');
+const loanController = require('./controller/loanController');
 
 const cors = require("cors");
 const path = require("path");
@@ -303,6 +304,7 @@ app.use('/api', studentFormRoutes);
 app.use("/api", zoomAuth);
 app.use('/api', iccrForm2);
 app.use('/api', iccrForm1);
+app.use('/api', loanController);
 
 app.use(express.static(path.join(__dirname, 'dist')));
 

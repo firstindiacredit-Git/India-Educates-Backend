@@ -68,7 +68,61 @@ const studentSchema = new Schema({
         upiId: { type: String },
         qrCode: { type: String },
         paymentApp: { type: String }
-    }
+    },
+    loans: [{
+        amount: {
+            type: Number,
+            required: true
+        },
+        date: {
+            type: Date,
+            default: Date.now
+        },
+        description: {
+            type: String,
+            required: true
+        },
+        dueDate: {
+            type: Date,
+            required: true
+        },
+        status: {
+            type: String,
+            enum: ['PENDING', 'PARTIALLY_PAID', 'PAID'],
+            default: 'PENDING'
+        },
+        interestRate: {
+            type: Number,
+            default: 0
+        },
+        remainingAmount: {
+            type: Number
+        },
+        notes: {
+            type: String
+        },
+        paymentHistory: [{
+            amount: {
+                type: Number,
+                required: true
+            },
+            date: {
+                type: Date,
+                default: Date.now
+            },
+            paymentMethod: {
+                type: String,
+                enum: ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'],
+                required: true
+            },
+            transactionId: {
+                type: String
+            },
+            notes: {
+                type: String
+            }
+        }]
+    }]
 }, {
     timestamps: true
 });
