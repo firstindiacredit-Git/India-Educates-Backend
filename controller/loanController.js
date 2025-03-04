@@ -122,4 +122,37 @@ router.delete('/student/:studentId/loan/:loanId', async (req, res) => {
     }
 });
 
+// Get all loans from all students
+router.get('/all-loans', async (req, res) => {
+    try {
+        // First get all students with their loans
+        const students = await Student.find({}).lean();
+        let allLoans = [];
+        let serialNumber = 1;
+
+        // Process each student's loans
+        students.forEach(student => {
+            if (student.loans && student.loans.length > 0) {
+                student.loans.forEach(loan => {
+                    allLoans.push({
+                        ...loan,
+                        serialNumber: serialNumber++,
+                        studentName: student.studentName || 'N/A',  // Add student name
+                        studentImage: student.studentImage || 'default.jpeg',
+                        studentId: student._id,
+                        date: loan.date ? new Date(loan.date).toLocaleDateString() : '-',
+                        dueDate: loan.dueDate ? new Date(loan.dueDate).toLocaleDateString() : '-'
+                    });
+                });
+            }
+        });
+
+        // console.log('Processed loans:', allLoans); // For debugging
+        res.status(200).json({ loans: allLoans });
+    } catch (error) {
+        console.error('Error in /all-loans:', error); // For debugging
+        res.status(500).json({ message: "Error fetching loans", error: error.message });
+    }
+});
+
 module.exports = router; 
