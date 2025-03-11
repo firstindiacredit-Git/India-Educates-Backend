@@ -10,10 +10,7 @@ const studentSchema = new Schema({
         type: String,
         default: "default.jpeg"
     },
-    resume: {
-        type: String,
-    },
-    aadhaarCard: {
+    studentIdImage: {
         type: String,
     },
     studentId: {
@@ -23,9 +20,6 @@ const studentSchema = new Schema({
     },
     joiningDate: {
         type: Date,
-    },
-    username: {
-        type: String,
     },
     password: {
         type: String,
@@ -40,24 +34,20 @@ const studentSchema = new Schema({
         type: String,
         required: true
     },
+    alternatePhone: {
+        type: String,
+    },
     course: {
+        type: String,
+    },
+    university: {
         type: String,
     },
     batch: {
         type: String,
-        default: ''
     },
     description: {
         type: String
-    },
-    socialLinks: {
-        linkedin: { type: String },
-        instagram: { type: String },
-        youtube: { type: String },
-        facebook: { type: String },
-        github: { type: String },
-        website: { type: String },
-        other: { type: String }
     },
     bankDetails: {
         accountNumber: { type: String },

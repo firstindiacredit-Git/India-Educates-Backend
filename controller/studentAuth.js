@@ -20,8 +20,7 @@ router.get('/totalStudents', async (req, res) => {
 
 const upload = uploadStudent.fields([
     { name: 'studentImage', maxCount: 1 },
-    { name: 'resume', maxCount: 1 },
-    { name: 'aadhaarCard', maxCount: 1 },
+    { name: 'studentIdImage', maxCount: 1 },
     { name: 'qrCode', maxCount: 1 }
 ]);
 
@@ -31,29 +30,19 @@ router.post('/students', upload, async (req, res) => {
         const files = req.files;
         const studentData = req.body;
 
-        if (files.studentImage) {
-            let newPath = files.studentImage[0].path.replace('uploads\\', "");
-            studentData.studentImage = newPath;
-        } else {
-            studentData.studentImage = "default.jpeg";
+        // Handle studentImage
+        if (files?.studentImage) {
+            studentData.studentImage = files.studentImage[0].path
+                .replace(/\\/g, '/')
+                .replace('uploads/', '');
         }
 
-        if (files.resume) {
-            studentData.resume = files.resume[0].path.replace('uploads\\', "");
+        // Handle studentIdImage
+        if (files?.studentIdImage) {
+            studentData.studentIdImage = files.studentIdImage[0].path
+                .replace(/\\/g, '/')
+                .replace('uploads/', '');
         }
-        if (files.aadhaarCard) {
-            studentData.aadhaarCard = files.aadhaarCard[0].path.replace('uploads\\', "");
-        }
-
-        studentData.socialLinks = {
-            linkedin: studentData.linkedin || '',
-            instagram: studentData.instagram || '',
-            youtube: studentData.youtube || '',
-            facebook: studentData.facebook || '',
-            github: studentData.github || '',
-            website: studentData.website || '',
-            other: studentData.other || ''
-        };
 
         // Handle bank details
         studentData.bankDetails = {
@@ -73,13 +62,6 @@ router.post('/students', upload, async (req, res) => {
         }
 
         // Clean up individual fields
-        delete studentData.linkedin;
-        delete studentData.instagram;
-        delete studentData.youtube;
-        delete studentData.facebook;
-        delete studentData.github;
-        delete studentData.website;
-        delete studentData.other;
         delete studentData.bankName;
         delete studentData.accountHolderName;
         delete studentData.accountNumber;
@@ -215,42 +197,20 @@ router.put('/students/:id', upload, async (req, res) => {
 
         // Handle file uploads if present
         if (files?.studentImage) {
-            studentData.studentImage = files.studentImage[0].path.replace('uploads\\', "");
+            studentData.studentImage = files.studentImage[0].path
+                .replace(/\\/g, '/')
+                .replace('uploads/', '');
         }
-        if (files?.resume) {
-            studentData.resume = files.resume[0].path.replace('uploads\\', "");
-        }
-        if (files?.aadhaarCard) {
-            studentData.aadhaarCard = files.aadhaarCard[0].path.replace('uploads\\', "");
+        if (files?.studentIdImage) {
+            studentData.studentIdImage = files.studentIdImage[0].path
+                .replace(/\\/g, '/')
+                .replace('uploads/', '');
         }
         if (files?.qrCode) {
             studentData.bankDetails = studentData.bankDetails || {};
             studentData.bankDetails.qrCode = files.qrCode[0].path
                 .replace(/\\/g, '/')
                 .replace('uploads/', '');
-        }
-
-        // Handle social links
-        if (studentData.linkedin || studentData.instagram || studentData.youtube || 
-            studentData.facebook || studentData.github || studentData.website || studentData.other) {
-            studentData.socialLinks = {
-                linkedin: studentData.linkedin || '',
-                instagram: studentData.instagram || '',
-                youtube: studentData.youtube || '',
-                facebook: studentData.facebook || '',
-                github: studentData.github || '',
-                website: studentData.website || '',
-                other: studentData.other || ''
-            };
-
-            // Clean up individual fields
-            delete studentData.linkedin;
-            delete studentData.instagram;
-            delete studentData.youtube;
-            delete studentData.facebook;
-            delete studentData.github;
-            delete studentData.website;
-            delete studentData.other;
         }
 
         // Handle bank details

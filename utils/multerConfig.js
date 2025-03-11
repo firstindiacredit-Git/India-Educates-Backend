@@ -40,8 +40,12 @@ const studentStorage = multer.diskStorage({
     let uploadPath = './uploads/student';
     
     // Handle different types of student documents
-    if (file.fieldname === 'profileImage') {
-      uploadPath = './uploads/student/profiles';
+    if (file.fieldname === 'studentImage') {
+      uploadPath = './uploads/student/images';
+    } else if (file.fieldname === 'studentIdImage') {
+      uploadPath = './uploads/student/id-images';
+    } else if (file.fieldname === 'qrCode') {
+      uploadPath = './uploads/student/qr';
     } else if (file.fieldname === 'admissionDocs') {
       uploadPath = './uploads/student/admission';
     } else if (file.fieldname === 'scholarshipDocs') {
@@ -52,6 +56,8 @@ const studentStorage = multer.diskStorage({
       uploadPath = './uploads/student/certificates';
     }
     
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
